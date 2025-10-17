@@ -95,9 +95,38 @@ class Text2ImageDataset(torch.utils.data.Dataset):
         return len(self.path) * self.datasets_repeat
 
 
+class TextDataset(torch.utils.data.Dataset):
+    def __init__(
+            self,
+            text_path: str,
+            datasets_repeat: int = 1,
+    ):
+        text = []
+        with open(text_path, 'r') as f:
+            for line in f:
+                text.append(line.strip())
+        self.text = text
+        logger.info_rank0(f"{len(self.text)} prompts cached in text.")
+        assert len(self.text) > 0
+        self.datasets_repeat = datasets_repeat
+
+    def __getitem__(self, index):
+        data_id = torch.randint(0, len(self.text), (1,))[0]
+        data_id = (data_id + index) % len(self.text)  # For fixed seed.
+        text = self.text[data_id]
+        return [{"text": text}]
+
+    def __len__(self):
+        return len(self.text) * self.datasets_repeat
+
+
 def build_tensor_dataset(base_path, metadata_path, datasets_repeat=1):
     return TensorDataset(base_path, metadata_path, datasets_repeat)
 
 
 def build_text_image_dataset(base_path, metadata_path, height, width, center_crop, random_flip, datasets_repeat=1):
     return Text2ImageDataset(base_path, metadata_path, height, width, center_crop, random_flip, datasets_repeat)
+
+
+def build_text_dataset(text_path: str, datasets_repeat: int = 1) -> TextDataset:
+    return TextDataset(text_path, datasets_repeat)

@@ -1,0 +1,53 @@
+model:
+  model_path: Qwen-Image/transformer
+  tokenizer_path: Qwen-Image
+  pretrained_text_encoder_path: Qwen-Image
+  config_path: ./configs/model_configs/flux/flux.json
+  attn_implementation: flash_attention_2
+
+
+data:
+  text_path: MovieGenVideoBench_extended.txt
+  datasets_repeat: 10
+
+train:
+  output_dir: Qwen-Image_DMD4
+  train_architecture: full
+  data_parallel_mode: fsdp1
+  ulysses_parallel_size: 1
+  global_batch_size: 8
+  micro_batch_size: 1
+  rmpad: false
+  rmpad_with_pos_ids: false
+  bsz_warmup_ratio: 0.007
+  dyn_bsz_margin: 0
+  dyn_bsz_buffer_size: 200
+  optimizer: adamw
+  lr: 1.0e-4
+  lr_warmup_ratio: 0.007
+  lr_decay_style: constant
+  lr_decay_ratio: 1.0
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  enable_mixed_precision: true
+  enable_gradient_checkpointing: true
+  enable_full_shard: true
+  enable_fsdp_offload: false
+  enable_activation_offload: false
+  init_device: cuda
+  enable_full_determinism: false
+  empty_cache_steps: 500
+  ckpt_manager: dcp
+  load_checkpoint_path: ""
+  save_steps: 100
+  max_steps: 500
+  num_train_epochs: 100
+  save_hf_weights: true
+  use_wandb: false
+  wandb_project: Qwen-Image
+  wandb_name: Qwen-Image
+  ops_to_save:
+    - aten.addmm.default
+    - torch.ops.flash_attn._flash_attn_forward.default
+    - aten._scaled_dot_product_flash_attention.default
+    - torch.ops.flash_attn_3.fwd.default
